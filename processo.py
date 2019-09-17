@@ -1,16 +1,15 @@
 '''
-Projeto2.2 - Controle de Leds
-Implemente 03 processos na Beagle Bone (P1,P2,P3).
+ Leds Control Using Process
+This code implements 03 process on Beagle Bone.
 
-- Processo P1, com alta prioridade, le 02 ADCs a cada segundo.
-Use esses valores para setar a prioridade de P2 e P3.
-A prioridade de P1 deve ser sempre maior que a de P2 e P3, para nao haver starvation.
+- The process 01, that have max priority, reads 02 ADCs and 
+uses this values for setting the others process priorities.
 
-- Processos P2 e P3: ficam num loop infinito com a seguinte execucao:
-  - executa uma carga.
-  - acende o Led respectivo (Led 1 ou Led2), via porta digital.
-  - executa uma carga.
-  - apaga o Led respectivo (Led 1 ou Led2), via porta digital.
+- The others two child process run a infinite loop that:
+runs a task, turns on the respective led using a digital port,
+runs a task again and turns the respective led off.
+
+P.S.: Process 01 priority must be higher to the others, to avoid starvation
 '''
 
 import Adafruit_BBIO.GPIO as GPIO
@@ -18,7 +17,7 @@ import Adafruit_BBIO.ADC as ADC
 import time
 import os
 
-def carga():
+def load():
   cont = 0
   for item in range(100000):
     cont+=1
@@ -27,7 +26,7 @@ def childProcessJob(led):
   GPIO.output(led, GPIO.HIGH)
   state=True
   while(True):
-    carga()
+    load()
     GPIO.output(led, GPIO.LOW if state else GPIO.HIGH)
     state=not state
 
@@ -52,18 +51,18 @@ try:
   pid = os.fork()
 
   if(pid == 0):
-    #Filho 1
+    #Child 1
     childProcessJob(LEDs[0])
   else:
-    #Pai
+    #Parent
     childrenPIDs.append(pid)
     pid = os.fork()
     os.setpriority(os.PRIO_PROCESS,childrenPIDs[0],ADCValues[0])
     if(pid == 0):
-      #Filho 2
+      #Child 2
       childProcessJob(LEDs[1])
     else:
-      #Pai
+      #Parent
       childrenPIDs.append(pid)
       os.setpriority(os.PRIO_PROCESS,childrenPIDs[1],ADCValues[1])
       while(True):
@@ -77,5 +76,5 @@ try:
         os.setpriority(os.PRIO_PROCESS,childrenPIDs[1],ADCValues[1])
 
 except os.error as e:
-    print('Erro:')
+    print('Error:')
     print (e)
