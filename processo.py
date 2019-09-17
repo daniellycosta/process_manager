@@ -9,7 +9,7 @@ uses this values for setting the others process priorities.
 runs a task, turns on the respective led using a digital port,
 runs a task again and turns the respective led off.
 
-P.S.: Process 01 priority must be higher to the others, to avoid starvation
+P.S.: Process 01 priority must be higher than the others, to avoid starvation
 '''
 
 import Adafruit_BBIO.GPIO as GPIO
